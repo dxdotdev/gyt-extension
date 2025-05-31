@@ -1,5 +1,7 @@
 import { defineConfig } from 'vite'
+
 import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
 import webExtension, { readJsonFile } from 'vite-plugin-web-extension'
 
 function generateManifest() {
@@ -17,6 +19,7 @@ function generateManifest() {
 export default defineConfig({
   plugins: [
     react(),
+    tailwindcss(),
     webExtension({
       manifest: generateManifest,
     }),

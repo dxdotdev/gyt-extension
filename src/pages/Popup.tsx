@@ -1,3 +1,3 @@
 export default function () {
-  return <div>kmsokdmasokdmas</div>
+  return <div className="bg-black">kmsokdmasokdmas</div>
 }
