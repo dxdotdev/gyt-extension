@@ -7,8 +7,9 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
 import { Button } from '@/components/ui/button'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Form, FormField } from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 const YT_REGEX = /(youtu\.be\/|youtube\.com\/(watch\?(.*&)?v=|(embed|v)\/))([^\?&"'>]+)/
 
@@ -70,8 +71,14 @@ export default function Popup() {
           )}
         />
 
+        <FormField
+          control={form.control}
+          name="filename"
+          render={({ field }) => <Input placeholder="filename" {...field} />}
+        />
+
         <div className="flex gap-2">
-          <Button variant={'outline'} type="submit">
+          <Button variant={'outline'} type="submit" className="grow">
             Download
           </Button>
 
