@@ -11,8 +11,14 @@
   "browser_action": {
     "default_popup": "src/popup.html"
   },
+  "content_scripts": [
+    {
+      "matches": ["*://www.youtube.com/*"],
+      "js": ["src/content.ts"]
+    }
+  ],
   "background": {
     "scripts": ["src/background.ts"]
   },
-  "permissions": ["tabs", "downloads"]
+  "permissions": ["activeTab", "downloads"]
 }

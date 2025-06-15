@@ -13,6 +13,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 const YT_REGEX = /(youtu\.be\/|youtube\.com\/(watch\?(.*&)?v=|(embed|v)\/))([^\?&"'>]+)/
 
+type VideoData = {
+  title: string
+}
+
 const formSchema = z.object({
   quality: z.enum(['maxresdefault', 'sddefault', 'mqdefault', 'default']),
   filename: z.string(),
@@ -20,26 +24,33 @@ const formSchema = z.object({
 
 export default function Popup() {
   const [videoId, setVideoId] = useState<string | undefined>()
+  const [videoData, setVideoData] = useState<VideoData>()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       quality: 'default',
-      filename: 'thumbnail',
+      filename: '$title',
     },
   })
 
   useEffect(() => {
     browser.tabs.query({ active: true, lastFocusedWindow: true }).then((tabs) => {
-      const tabUrl = tabs[0].url || ''
+      const tab = tabs[0]
+      const tabUrl = tab.url || ''
 
       if (YT_REGEX.test(tabUrl)) setVideoId(YT_REGEX.exec(tabUrl)?.at(5))
+
+      if (tab.id) browser.tabs.sendMessage(tab.id, '').then((data) => setVideoData(data))
     })
   }, [])
 
   function handleDownload(values: z.infer<typeof formSchema>) {
+    if (!videoData) throw new Error('Error passing video data.')
+    const filename = values.filename.replaceAll('$title', videoData?.title)
+
     const downloadUrl = `https://img.youtube.com/vi/${videoId}/${values.quality}.jpg`
-    browser.downloads.download({ url: downloadUrl, filename: `${values.filename}.jpg` })
+    browser.downloads.download({ url: downloadUrl, filename: `${filename}.jpg` })
   }
 
   if (!videoId)
