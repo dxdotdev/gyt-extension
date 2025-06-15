@@ -20,8 +20,10 @@ export default function () {
     })
   }, [])
 
-  const downloadUrl = `https://img.youtube.com/vi/${videoId}/${imageQuality}.jpg`
-  browser.downloads.download({ url: downloadUrl, filename: 'Teste' })
+  function handleDownload() {
+    const downloadUrl = `https://img.youtube.com/vi/${videoId}/${imageQuality}.jpg`
+    browser.downloads.download({ url: downloadUrl, filename: 'default.jpg' })
+  }
 
   if (!isInYouTube)
     return (
@@ -46,7 +48,9 @@ export default function () {
       </Select>
 
       <div className="flex gap-2">
-        <Button variant={'outline'}>Download</Button>
+        <Button variant={'outline'} onClick={handleDownload}>
+          Download
+        </Button>
 
         <Button variant={'outline'} size="icon">
           <Clipboard />
