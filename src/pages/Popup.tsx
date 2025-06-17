@@ -1,5 +1,6 @@
-import { Clipboard } from 'lucide-react'
+import { Check, Clipboard, Loader2, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { sanitize } from 'sanitize-filename-ts'
 import browser from 'webextension-polyfill'
 
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -17,6 +18,8 @@ type VideoData = {
   title: string
 }
 
+type Status = 'default' | 'loading' | 'success' | 'error'
+
 const formSchema = z.object({
   quality: z.enum(['maxresdefault', 'sddefault', 'mqdefault', 'default']),
   filename: z.string(),
@@ -25,6 +28,9 @@ const formSchema = z.object({
 export default function Popup() {
   const [videoId, setVideoId] = useState<string | undefined>()
   const [videoData, setVideoData] = useState<VideoData>()
+
+  const [clipboardStatus, setClipboardStatus] = useState<Status>('default')
+  const [downloadStatus, setDownloadStatus] = useState<Status>('default')
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -46,11 +52,46 @@ export default function Popup() {
   }, [])
 
   function handleDownload(values: z.infer<typeof formSchema>) {
-    if (!videoData) throw new Error('Error passing video data.')
-    const filename = values.filename.replaceAll('$title', videoData?.title)
+    setDownloadStatus('loading')
 
+    if (!videoData) throw new Error('Error passing video data.')
+    const filename = sanitize(values.filename.replaceAll('$title', videoData?.title))
     const downloadUrl = `https://img.youtube.com/vi/${videoId}/${values.quality}.jpg`
-    browser.downloads.download({ url: downloadUrl, filename: `${filename}.jpg` })
+
+    browser.downloads
+      .download({ url: downloadUrl, filename: `${filename}.jpg` })
+      .then(() => {
+        setDownloadStatus('success')
+      })
+      .catch(() => {
+        setDownloadStatus('error')
+      })
+      .finally(() => [
+        setTimeout(() => {
+          setDownloadStatus('default')
+        }, 3000),
+      ])
+  }
+
+  function handleWriteClipboard() {
+    setClipboardStatus('loading')
+
+    const { quality } = form.getValues()
+    const downloadUrl = `https://img.youtube.com/vi/${videoId}/${quality}.jpg`
+
+    navigator.clipboard
+      .writeText(downloadUrl)
+      .then(() => {
+        setClipboardStatus('success')
+      })
+      .catch(() => {
+        setClipboardStatus('error')
+      })
+      .finally(() => {
+        setTimeout(() => {
+          setClipboardStatus('default')
+        }, 3000)
+      })
   }
 
   if (!videoId)
@@ -89,12 +130,24 @@ export default function Popup() {
         />
 
         <div className="flex gap-2">
-          <Button variant={'outline'} type="submit" className="grow">
-            Download
+          <Button variant="outline" type="submit" className="grow" disabled={downloadStatus !== 'default'}>
+            {downloadStatus === 'default' && 'Download'}
+            {downloadStatus === 'loading' && <Loader2 className="animate-spin" />}
+            {downloadStatus === 'success' && <Check />}
+            {downloadStatus === 'error' && <X />}
           </Button>
 
-          <Button variant={'outline'} size="icon">
-            <Clipboard />
+          <Button
+            variant="outline"
+            size="icon"
+            type="button"
+            disabled={clipboardStatus !== 'default'}
+            onClick={handleWriteClipboard}
+          >
+            {clipboardStatus === 'default' && <Clipboard />}
+            {clipboardStatus === 'loading' && <Loader2 className="animate-spin" />}
+            {clipboardStatus === 'success' && <Check />}
+            {clipboardStatus === 'error' && <X />}
           </Button>
         </div>
       </form>

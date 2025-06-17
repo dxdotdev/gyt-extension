@@ -20,5 +20,5 @@
   "background": {
     "scripts": ["src/background.ts"]
   },
-  "permissions": ["activeTab", "downloads"]
+  "permissions": ["activeTab", "downloads", "clipboardWrite"]
 }
