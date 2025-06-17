@@ -1,5 +1,6 @@
 import { Check, Clipboard, Loader2, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import useFormPersist from 'react-hook-form-persist'
 import { sanitize } from 'sanitize-filename-ts'
 import browser from 'webextension-polyfill'
 
@@ -38,6 +39,12 @@ export default function Popup() {
       quality: 'default',
       filename: '$title',
     },
+  })
+
+  useFormPersist('gyt', {
+    watch: form.watch,
+    setValue: form.setValue,
+    storage: window.localStorage,
   })
 
   useEffect(() => {
