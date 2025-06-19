@@ -1,4 +1,4 @@
-import { Check, Clipboard, Loader2, X } from 'lucide-react'
+import { Download, Check, Clipboard, Loader2, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import useFormPersist from 'react-hook-form-persist'
 import { sanitize } from 'sanitize-filename-ts'
@@ -11,7 +11,7 @@ import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Form, FormField } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 
 const YT_REGEX = /(youtu\.be\/|youtube\.com\/(watch\?(.*&)?v=|(embed|v)\/))([^\?&"'>]+)/
 
@@ -21,8 +21,10 @@ type VideoData = {
 
 type Status = 'default' | 'loading' | 'success' | 'error'
 
+type Quality = 'maxresdefault' | 'sddefault' | 'mqdefault'
+
 const formSchema = z.object({
-  quality: z.enum(['maxresdefault', 'sddefault', 'mqdefault', 'default']),
+  quality: z.enum(['maxresdefault', 'sddefault', 'mqdefault']),
   filename: z.string(),
 })
 
@@ -36,7 +38,7 @@ export default function Popup() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      quality: 'default',
+      quality: 'maxresdefault',
       filename: '$title',
     },
   })
@@ -103,30 +105,30 @@ export default function Popup() {
 
   if (!videoId)
     return (
-      <div className="grid aspect-video w-[200px] place-items-center">
+      <div className="grid aspect-video w-[240px] place-items-center">
         <p className="text-muted-foreground text-xs">Enter in a valid YouTube video.</p>
       </div>
     )
 
   return (
     <Form {...form}>
-      <form className="flex w-[200px] flex-col gap-2 bg-background p-4" onSubmit={form.handleSubmit(handleDownload)}>
+      <form className="flex w-[250px] flex-col gap-2 bg-background p-4" onSubmit={form.handleSubmit(handleDownload)}>
         <FormField
           control={form.control}
           name="quality"
           render={({ field }) => (
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Quality" />
-              </SelectTrigger>
-
-              <SelectContent>
-                <SelectItem value="maxresdefault">HD (1280x720)</SelectItem>
-                <SelectItem value="sddefault">SD (640x480)</SelectItem>
-                <SelectItem value="mqdefault">Normal (320x180)</SelectItem>
-                <SelectItem value="default">Normal (120x90)</SelectItem>
-              </SelectContent>
-            </Select>
+            <ToggleGroup
+              type="single"
+              size="sm"
+              variant="outline"
+              className="w-full"
+              onValueChange={(value: Quality) => form.setValue('quality', value)}
+              defaultValue={field.value}
+            >
+              <ToggleGroupItem value="maxresdefault">HD</ToggleGroupItem>
+              <ToggleGroupItem value="sddefault">SD</ToggleGroupItem>
+              <ToggleGroupItem value="mqdefault">180p</ToggleGroupItem>
+            </ToggleGroup>
           )}
         />
 
@@ -138,7 +140,7 @@ export default function Popup() {
 
         <div className="flex gap-2">
           <Button variant="outline" type="submit" className="grow" disabled={downloadStatus !== 'default'}>
-            {downloadStatus === 'default' && 'Download'}
+            {downloadStatus === 'default' && <Download />}
             {downloadStatus === 'loading' && <Loader2 className="animate-spin" />}
             {downloadStatus === 'success' && <Check />}
             {downloadStatus === 'error' && <X />}
